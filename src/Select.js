@@ -54,6 +54,7 @@ const Select = React.createClass({
 		menuBuffer: React.PropTypes.number,         // optional buffer (in px) between the bottom of the viewport and the bottom of the menu
 		menuContainerStyle: React.PropTypes.object, // optional style to apply to the menu container
 		menuRenderer: React.PropTypes.func,         // renders a custom menu with options
+		menuShowAll: React.PropTypes.bool,          // wether to show all menu items or just the unselected ones.
 		menuStyle: React.PropTypes.object,          // optional style to apply to the menu
 		multi: React.PropTypes.bool,                // multi-value input
 		name: React.PropTypes.string,               // generates a hidden <input /> tag with this field name for html forms
@@ -85,6 +86,7 @@ const Select = React.createClass({
 		tabSelectsValue: React.PropTypes.bool,      // whether to treat tabbing out while focused to be value selection
 		value: React.PropTypes.any,                 // initial field value
 		valueComponent: React.PropTypes.func,       // value component to render
+		valueArrayComponent: React.PropTypes.func,  // value array component to render
 		valueKey: React.PropTypes.string,           // path of the label value in option objects
 		valueRenderer: React.PropTypes.func,        // valueRenderer: function (option) {}
 		wrapperStyle: React.PropTypes.object,       // optional style to apply to the component wrapper
@@ -114,6 +116,7 @@ const Select = React.createClass({
 			matchPos: 'any',
 			matchProp: 'any',
 			menuBuffer: 0,
+			menuShowAll: false,
 			multi: false,
 			noResultsText: 'No results found',
 			onBlurResetsInput: true,
@@ -127,6 +130,7 @@ const Select = React.createClass({
 			simpleValue: false,
 			tabSelectsValue: true,
 			valueComponent: Value,
+			valueArrayComponent: null,
 			valueKey: 'value',
 		};
 	},
@@ -607,24 +611,36 @@ const Select = React.createClass({
 	renderValue (valueArray, isOpen) {
 		let renderLabel = this.props.valueRenderer || this.getOptionLabel;
 		let ValueComponent = this.props.valueComponent;
+		const ValueArrayComponent = this.props.valueArrayComponent
 		if (!valueArray.length) {
 			return !this.state.inputValue ? <div className="Select-placeholder">{this.props.placeholder}</div> : null;
 		}
 		let onClick = this.props.onValueClick ? this.handleValueClick : null;
 		if (this.props.multi) {
-			return valueArray.map((value, i) => {
+			if (ValueArrayComponent) {
 				return (
-					<ValueComponent
-						disabled={this.props.disabled || value.clearableValue === false}
-						key={`value-${i}-${value[this.props.valueKey]}`}
+					<ValueArrayComponent
+						disabled={this.props.disabled}
 						onClick={onClick}
 						onRemove={this.removeValue}
-						value={value}
-						>
-						{renderLabel(value)}
-					</ValueComponent>
-				);
-			});
+						values={valueArray}
+					/>
+				)
+			} else {
+				return valueArray.map((value, i) => {
+					return (
+						<ValueComponent
+							disabled={this.props.disabled || value.clearableValue === false}
+							key={`value-${i}-${value[this.props.valueKey]}`}
+							onClick={onClick}
+							onRemove={this.removeValue}
+							value={value}
+							>
+							{renderLabel(value)}
+						</ValueComponent>
+					);
+				});
+			}
 		} else if (!this.state.inputValue) {
 			if (isOpen) onClick = null;
 			return (
@@ -783,7 +799,7 @@ const Select = React.createClass({
 							isDisabled={option.disabled}
 							isFocused={isFocused}
 							key={`option-${i}-${option[this.props.valueKey]}`}
-							onSelect={this.selectValue}
+							onSelect={isSelected ? this.removeValue : this.selectValue}
 							onFocus={this.focusOption}
 							option={option}
 							isSelected={isSelected}
@@ -858,7 +874,7 @@ const Select = React.createClass({
 
 	render () {
 		let valueArray = this.getValueArray(this.props.value);
-		let options = this._visibleOptions = this.filterOptions(this.props.multi ? valueArray : null);
+		let options = this._visibleOptions = this.filterOptions((this.props.multi && !this.props.menuShowAll) ? valueArray : null);
 		let isOpen = this.state.isOpen;
 		if (this.props.multi && !options.length && valueArray.length && !this.state.inputValue) isOpen = false;
 		let focusedOption = this._focusedOption = this.getFocusableOption(valueArray[0]);
@@ -891,7 +907,7 @@ const Select = React.createClass({
 					{this.renderClear()}
 					{this.renderArrow()}
 				</div>
-				{isOpen ? this.renderOuter(options, !this.props.multi ? valueArray : null, focusedOption) : null}
+				{isOpen ? this.renderOuter(options, (this.props.menuShowAll || !this.props.multi) ? valueArray : null, focusedOption) : null}
 			</div>
 		);
 	}
