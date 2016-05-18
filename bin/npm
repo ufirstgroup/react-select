@@ -1,0 +1,16 @@
+#!/bin/bash
+
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+if [ "$DIR" == "" ]; then
+    echo -e >&2 "\e[41mCurrent directory not found! This can be dangerous => exit.\e[0m"
+    exit
+fi
+
+# On OSX we use docker toolbox and the volumes in the docker container always belong to User 1000.
+[[ "$OSTYPE" == darwin* ]] && DOCKER_USER_ID=1000 || DOCKER_USER_ID=$(id -u)
+
+docker run -i \
+	-e "USER_ID=$DOCKER_USER_ID" \
+	-v $DIR/..:/source \
+	--rm \
+	ufirstgroup/npm-builder $(basename $0) $@

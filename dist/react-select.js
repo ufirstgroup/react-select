@@ -67,7 +67,7 @@ var Async = _react2['default'].createClass({
 		noResultsText: stringOrNode, // placeholder displayed when there are no matching search results (shared with Select)
 		onInputChange: _react2['default'].PropTypes.func, // onInputChange handler: function (inputValue) {}
 		placeholder: stringOrNode, // field placeholder, displayed when there's no value (shared with Select)
-		searchPromptText: _react2['default'].PropTypes.string, // label to prompt for search input
+		searchPromptText: stringOrNode, // label to prompt for search input
 		searchingText: _react2['default'].PropTypes.string },
 	// message to display while options are loading
 	getDefaultProps: function getDefaultProps() {
@@ -136,6 +136,7 @@ var Async = _react2['default'].createClass({
 		}
 		if (this.props.ignoreAccents) input = (0, _utilsStripDiacritics2['default'])(input);
 		if (this.props.ignoreCase) input = input.toLowerCase();
+
 		this._lastInput = input;
 		if (input.length < this.props.minimumInput) {
 			return this.resetState();
@@ -160,9 +161,10 @@ var Async = _react2['default'].createClass({
 
 		if (this.props.isLoading) isLoading = true;
 		var placeholder = isLoading ? this.props.loadingPlaceholder : this.props.placeholder;
-		if (!options.length) {
-			if (this._lastInput.length < this.props.minimumInput) noResultsText = this.props.searchPromptText;
-			if (isLoading) noResultsText = this.props.searchingText;
+		if (isLoading) {
+			noResultsText = this.props.searchingText;
+		} else if (!options.length && this._lastInput.length < this.props.minimumInput) {
+			noResultsText = this.props.searchPromptText;
 		}
 		return _react2['default'].createElement(_Select2['default'], _extends({}, this.props, {
 			ref: 'select',
@@ -372,6 +374,7 @@ var Select = _react2['default'].createClass({
 		menuBuffer: _react2['default'].PropTypes.number, // optional buffer (in px) between the bottom of the viewport and the bottom of the menu
 		menuContainerStyle: _react2['default'].PropTypes.object, // optional style to apply to the menu container
 		menuRenderer: _react2['default'].PropTypes.func, // renders a custom menu with options
+		menuShowAll: _react2['default'].PropTypes.bool, // wether to show all menu items or just the unselected ones.
 		menuStyle: _react2['default'].PropTypes.object, // optional style to apply to the menu
 		multi: _react2['default'].PropTypes.bool, // multi-value input
 		name: _react2['default'].PropTypes.string, // generates a hidden <input /> tag with this field name for html forms
@@ -403,6 +406,7 @@ var Select = _react2['default'].createClass({
 		tabSelectsValue: _react2['default'].PropTypes.bool, // whether to treat tabbing out while focused to be value selection
 		value: _react2['default'].PropTypes.any, // initial field value
 		valueComponent: _react2['default'].PropTypes.func, // value component to render
+		valueArrayComponent: _react2['default'].PropTypes.func, // value array component to render
 		valueKey: _react2['default'].PropTypes.string, // path of the label value in option objects
 		valueRenderer: _react2['default'].PropTypes.func, // valueRenderer: function (option) {}
 		wrapperStyle: _react2['default'].PropTypes.object },
@@ -432,6 +436,7 @@ var Select = _react2['default'].createClass({
 			matchPos: 'any',
 			matchProp: 'any',
 			menuBuffer: 0,
+			menuShowAll: false,
 			multi: false,
 			noResultsText: 'No results found',
 			onBlurResetsInput: true,
@@ -445,6 +450,7 @@ var Select = _react2['default'].createClass({
 			simpleValue: false,
 			tabSelectsValue: true,
 			valueComponent: _Value2['default'],
+			valueArrayComponent: null,
 			valueKey: 'value'
 		};
 	},
@@ -576,6 +582,10 @@ var Select = _react2['default'].createClass({
 			return;
 		}
 
+		if (event.target.tagName === 'INPUT') {
+			return;
+		}
+
 		// prevent default event handlers
 		event.stopPropagation();
 		event.preventDefault();
@@ -589,6 +599,14 @@ var Select = _react2['default'].createClass({
 		}
 
 		if (this.state.isFocused) {
+			// On iOS, we can get into a state where we think the input is focused but it isn't really,
+			// since iOS ignores programmatic calls to input.focus() that weren't triggered by a click event.
+			// Call focus() again here to be safe.
+			this.focus();
+
+			// clears value so that the cursor will be a the end of input then the component re-renders
+			this.refs.input.getInput().value = '';
+
 			// if the input is focused, ensure the menu is open
 			this.setState({
 				isOpen: true,
@@ -677,7 +695,7 @@ var Select = _react2['default'].createClass({
 		if (this.state.inputValue !== event.target.value && this.props.onInputChange) {
 			var nextState = this.props.onInputChange(newInputValue);
 			// Note: != used deliberately here to catch undefined and null
-			if (nextState != null) {
+			if (nextState != null && typeof nextState !== 'object') {
 				newInputValue = '' + nextState;
 			}
 		}
@@ -936,6 +954,7 @@ var Select = _react2['default'].createClass({
 
 		var renderLabel = this.props.valueRenderer || this.getOptionLabel;
 		var ValueComponent = this.props.valueComponent;
+		var ValueArrayComponent = this.props.valueArrayComponent;
 		if (!valueArray.length) {
 			return !this.state.inputValue ? _react2['default'].createElement(
 				'div',
@@ -945,19 +964,28 @@ var Select = _react2['default'].createClass({
 		}
 		var onClick = this.props.onValueClick ? this.handleValueClick : null;
 		if (this.props.multi) {
-			return valueArray.map(function (value, i) {
-				return _react2['default'].createElement(
-					ValueComponent,
-					{
-						disabled: _this2.props.disabled || value.clearableValue === false,
-						key: 'value-' + i + '-' + value[_this2.props.valueKey],
-						onClick: onClick,
-						onRemove: _this2.removeValue,
-						value: value
-					},
-					renderLabel(value)
-				);
-			});
+			if (ValueArrayComponent) {
+				return _react2['default'].createElement(ValueArrayComponent, {
+					disabled: this.props.disabled,
+					onClick: onClick,
+					onRemove: this.removeValue,
+					values: valueArray
+				});
+			} else {
+				return valueArray.map(function (value, i) {
+					return _react2['default'].createElement(
+						ValueComponent,
+						{
+							disabled: _this2.props.disabled || value.clearableValue === false,
+							key: 'value-' + i + '-' + value[_this2.props.valueKey],
+							onClick: onClick,
+							onRemove: _this2.removeValue,
+							value: value
+						},
+						renderLabel(value)
+					);
+				});
+			}
 		} else if (!this.state.inputValue) {
 			if (isOpen) onClick = null;
 			return _react2['default'].createElement(
@@ -1112,7 +1140,7 @@ var Select = _react2['default'].createClass({
 									isDisabled: option.disabled,
 									isFocused: isFocused,
 									key: 'option-' + i + '-' + option[_this4.props.valueKey],
-									onSelect: _this4.selectValue,
+									onSelect: isSelected ? _this4.removeValue : _this4.selectValue,
 									onFocus: _this4.focusOption,
 									option: option,
 									isSelected: isSelected,
@@ -1194,7 +1222,7 @@ var Select = _react2['default'].createClass({
 
 	render: function render() {
 		var valueArray = this.getValueArray(this.props.value);
-		var options = this._visibleOptions = this.filterOptions(this.props.multi ? valueArray : null);
+		var options = this._visibleOptions = this.filterOptions(this.props.multi && !this.props.menuShowAll ? valueArray : null);
 		var isOpen = this.state.isOpen;
 		if (this.props.multi && !options.length && valueArray.length && !this.state.inputValue) isOpen = false;
 		var focusedOption = this._focusedOption = this.getFocusableOption(valueArray[0]);
@@ -1230,7 +1258,7 @@ var Select = _react2['default'].createClass({
 				this.renderClear(),
 				this.renderArrow()
 			),
-			isOpen ? this.renderOuter(options, !this.props.multi ? valueArray : null, focusedOption) : null
+			isOpen ? this.renderOuter(options, this.props.menuShowAll || !this.props.multi ? valueArray : null, focusedOption) : null
 		);
 	}
 

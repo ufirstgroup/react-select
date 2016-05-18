@@ -1,5 +1,10 @@
 # React-Select
 
+## v1.0.0-beta13-ufg / 2016-06-18
+
+* added; `valueArrayComponent` prop, allows you to override the component for all values
+* added; `menuShowAll` prop, allows you to show all options in the drop down, even the selected ones
+
 ## v1.0.0-beta13 / 2016-05-30
 
 * added; `inputRenderer` prop, allows you to override the input component, thanks [Sean Burke](https://github.com/leftmostcat)
