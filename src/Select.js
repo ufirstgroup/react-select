@@ -493,7 +493,9 @@ const Select = React.createClass({
 	},
 
 	selectValue (value) {
-		this.hasScrolledToOption = false;
+		if (!this.props.menuShowAll) {
+			this.hasScrolledToOption = false;
+		}
 		if (this.props.multi) {
 			this.addValue(value);
 			this.setState({
