@@ -184,7 +184,7 @@ const Select = React.createClass({
 		if (this.refs.menu && this.refs.focused && this.state.isOpen && !this.hasScrolledToOption) {
 			let focusedOptionNode = ReactDOM.findDOMNode(this.refs.focused);
 			let menuNode = ReactDOM.findDOMNode(this.refs.menu);
-			menuNode.scrollTop = focusedOptionNode.offsetTop;
+			menuNode.scrollTop = 0;
 			this.hasScrolledToOption = true;
 		} else if (!this.state.isOpen) {
 			this.hasScrolledToOption = false;
@@ -270,33 +270,11 @@ const Select = React.createClass({
 		event.stopPropagation();
 		event.preventDefault();
 
-		// for the non-searchable select, toggle the menu
-		if (!this.props.searchable) {
-			this.focus();
-			return this.setState({
-				isOpen: !this.state.isOpen,
-			});
-		}
 
-		if (this.state.isFocused) {
-			// On iOS, we can get into a state where we think the input is focused but it isn't really,
-			// since iOS ignores programmatic calls to input.focus() that weren't triggered by a click event.
-			// Call focus() again here to be safe.
-			this.focus();
-
-			// clears value so that the cursor will be a the end of input then the component re-renders
-			this.refs.input.getInput().value = '';
-
-			// if the input is focused, ensure the menu is open
-			this.setState({
-				isOpen: true,
-				isPseudoFocused: false,
-			});
-		} else {
-			// otherwise, focus the input and open the menu
-			this._openAfterFocus = true;
-			this.focus();
-		}
+		this.focus();
+		return this.setState({
+			isOpen: !this.state.isOpen,
+		});
 	},
 
 	handleMouseDownOnArrow (event) {
@@ -615,7 +593,7 @@ const Select = React.createClass({
 		let ValueComponent = this.props.valueComponent;
 		const ValueArrayComponent = this.props.valueArrayComponent
 		if (!valueArray.length) {
-			return !this.state.inputValue ? <div className="Select-placeholder">{this.props.placeholder}</div> : null;
+			return <div className="Select-placeholder">{this.props.placeholder}</div>;
 		}
 		let onClick = this.props.onValueClick ? this.handleValueClick : null;
 		if (this.props.multi) {
@@ -657,7 +635,7 @@ const Select = React.createClass({
 		}
 	},
 
-	renderInput (valueArray) {
+	renderInput () {
 		if (this.props.inputRenderer) {
 			return this.props.inputRenderer();
 		} else {
@@ -671,7 +649,7 @@ const Select = React.createClass({
 						onBlur={this.handleInputBlur}
 						onFocus={this.handleInputFocus}
 						ref="input"
-						style={{ border: 0, width: 1, display:'inline-block' }}/>
+						style={{ border: 0, width: 1}}/>
 				);
 			}
 			if (this.props.autosize) {
@@ -868,6 +846,7 @@ const Select = React.createClass({
 						 style={this.props.menuStyle}
 						 onScroll={this.handleMenuScroll}
 						 onMouseDown={this.handleMouseDownOnMenu}>
+					{this.renderInput()}
 					{menu}
 				</div>
 			</div>
@@ -904,7 +883,6 @@ const Select = React.createClass({
 						 onTouchStart={this.handleTouchStart}
 						 onTouchMove={this.handleTouchMove}>
 					{this.renderValue(valueArray, isOpen)}
-					{this.renderInput(valueArray)}
 					{this.renderLoading()}
 					{this.renderClear()}
 					{this.renderArrow()}

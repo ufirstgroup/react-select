@@ -504,7 +504,7 @@ var Select = _react2['default'].createClass({
 		if (this.refs.menu && this.refs.focused && this.state.isOpen && !this.hasScrolledToOption) {
 			var focusedOptionNode = _reactDom2['default'].findDOMNode(this.refs.focused);
 			var menuNode = _reactDom2['default'].findDOMNode(this.refs.menu);
-			menuNode.scrollTop = focusedOptionNode.offsetTop;
+			menuNode.scrollTop = 0;
 			this.hasScrolledToOption = true;
 		} else if (!this.state.isOpen) {
 			this.hasScrolledToOption = false;
@@ -590,33 +590,10 @@ var Select = _react2['default'].createClass({
 		event.stopPropagation();
 		event.preventDefault();
 
-		// for the non-searchable select, toggle the menu
-		if (!this.props.searchable) {
-			this.focus();
-			return this.setState({
-				isOpen: !this.state.isOpen
-			});
-		}
-
-		if (this.state.isFocused) {
-			// On iOS, we can get into a state where we think the input is focused but it isn't really,
-			// since iOS ignores programmatic calls to input.focus() that weren't triggered by a click event.
-			// Call focus() again here to be safe.
-			this.focus();
-
-			// clears value so that the cursor will be a the end of input then the component re-renders
-			this.refs.input.getInput().value = '';
-
-			// if the input is focused, ensure the menu is open
-			this.setState({
-				isOpen: true,
-				isPseudoFocused: false
-			});
-		} else {
-			// otherwise, focus the input and open the menu
-			this._openAfterFocus = true;
-			this.focus();
-		}
+		this.focus();
+		return this.setState({
+			isOpen: !this.state.isOpen
+		});
 	},
 
 	handleMouseDownOnArrow: function handleMouseDownOnArrow(event) {
@@ -958,11 +935,11 @@ var Select = _react2['default'].createClass({
 		var ValueComponent = this.props.valueComponent;
 		var ValueArrayComponent = this.props.valueArrayComponent;
 		if (!valueArray.length) {
-			return !this.state.inputValue ? _react2['default'].createElement(
+			return _react2['default'].createElement(
 				'div',
 				{ className: 'Select-placeholder' },
 				this.props.placeholder
-			) : null;
+			);
 		}
 		var onClick = this.props.onValueClick ? this.handleValueClick : null;
 		if (this.props.multi) {
@@ -1002,7 +979,7 @@ var Select = _react2['default'].createClass({
 		}
 	},
 
-	renderInput: function renderInput(valueArray) {
+	renderInput: function renderInput() {
 		if (this.props.inputRenderer) {
 			return this.props.inputRenderer();
 		} else {
@@ -1014,7 +991,7 @@ var Select = _react2['default'].createClass({
 					onBlur: this.handleInputBlur,
 					onFocus: this.handleInputFocus,
 					ref: 'input',
-					style: { border: 0, width: 1, display: 'inline-block' } }));
+					style: { border: 0, width: 1 } }));
 			}
 			if (this.props.autosize) {
 				return _react2['default'].createElement(_reactInputAutosize2['default'], _extends({}, this.props.inputProps, {
@@ -1217,6 +1194,7 @@ var Select = _react2['default'].createClass({
 					style: this.props.menuStyle,
 					onScroll: this.handleMenuScroll,
 					onMouseDown: this.handleMouseDownOnMenu },
+				this.renderInput(),
 				menu
 			)
 		);
@@ -1255,7 +1233,6 @@ var Select = _react2['default'].createClass({
 					onTouchStart: this.handleTouchStart,
 					onTouchMove: this.handleTouchMove },
 				this.renderValue(valueArray, isOpen),
-				this.renderInput(valueArray),
 				this.renderLoading(),
 				this.renderClear(),
 				this.renderArrow()
