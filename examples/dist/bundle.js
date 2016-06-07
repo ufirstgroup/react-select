@@ -419,7 +419,7 @@ var _react2 = _interopRequireDefault(_react);
 
 var _reactDom = require('react-dom');
 
-var _reactDom3 = _interopRequireDefault(_reactDom);
+var _reactDom2 = _interopRequireDefault(_reactDom);
 
 var _reactInputAutosize = require('react-input-autosize');
 
@@ -615,8 +615,8 @@ var Select = _react2['default'].createClass({
 	componentDidUpdate: function componentDidUpdate(prevProps, prevState) {
 		// focus to the selected option
 		if (this.refs.menu && this.refs.focused && this.state.isOpen && !this.hasScrolledToOption) {
-			var focusedOptionNode = _reactDom3['default'].findDOMNode(this.refs.focused);
-			var menuNode = _reactDom3['default'].findDOMNode(this.refs.menu);
+			var focusedOptionNode = _reactDom2['default'].findDOMNode(this.refs.focused);
+			var menuNode = _reactDom2['default'].findDOMNode(this.refs.menu);
 			menuNode.scrollTop = 0;
 			this.hasScrolledToOption = true;
 			this.handleMenuFocus();
@@ -627,8 +627,8 @@ var Select = _react2['default'].createClass({
 
 		if (this._scrollToFocusedOptionOnUpdate && this.refs.focused && this.refs.menu) {
 			this._scrollToFocusedOptionOnUpdate = false;
-			var focusedDOM = _reactDom3['default'].findDOMNode(this.refs.focused);
-			var menuDOM = _reactDom3['default'].findDOMNode(this.refs.menu);
+			var focusedDOM = _reactDom2['default'].findDOMNode(this.refs.focused);
+			var menuDOM = _reactDom2['default'].findDOMNode(this.refs.menu);
 			var focusedRect = focusedDOM.getBoundingClientRect();
 			var menuRect = menuDOM.getBoundingClientRect();
 			if (focusedRect.bottom > menuRect.bottom || focusedRect.top < menuRect.top) {
