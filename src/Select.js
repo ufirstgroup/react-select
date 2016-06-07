@@ -186,6 +186,8 @@ const Select = React.createClass({
 			let menuNode = ReactDOM.findDOMNode(this.refs.menu);
 			menuNode.scrollTop = 0;
 			this.hasScrolledToOption = true;
+			this.handleMenuFocus();
+			document.getElementsByClassName('filter-panel')[0].scrollTop = document.body.scrollHeight;
 		} else if (!this.state.isOpen) {
 			this.hasScrolledToOption = false;
 		}
@@ -414,6 +416,25 @@ const Select = React.createClass({
 	handleValueClick (option, event) {
 		if (!this.props.onValueClick) return;
 		this.props.onValueClick(option, event);
+	},
+
+	handleMenuFocus (event) {
+		var menuNode = _reactDom2['default'].findDOMNode(this.refs.menu);
+		if (menuNode){
+			menuNode.focus();
+		}
+	},
+
+	handleMenuBlur (event) {
+		var onBlurredState = {
+			isFocused: false,
+			isOpen: false,
+			isPseudoFocused: false
+		};
+		if (this.props.onBlurResetsInput) {
+			onBlurredState.inputValue = '';
+		}
+		this.setState(onBlurredState);
 	},
 
 	handleMenuScroll (event) {
@@ -649,7 +670,7 @@ const Select = React.createClass({
 						onBlur={this.handleInputBlur}
 						onFocus={this.handleInputFocus}
 						ref="input"
-						style={{ border: 0, width: 1}}/>
+						style={{ border: 0, width: 1, height: 0}}/>
 				);
 			}
 			if (this.props.autosize) {
@@ -843,8 +864,10 @@ const Select = React.createClass({
 		return (
 			<div ref="menuContainer" className="Select-menu-outer" style={this.props.menuContainerStyle}>
 				<div ref="menu" className="Select-menu"
+						 tabIndex=0
 						 style={this.props.menuStyle}
 						 onScroll={this.handleMenuScroll}
+						 onBlur={this.handleMenuBlur}
 						 onMouseDown={this.handleMouseDownOnMenu}>
 					{this.renderInput()}
 					{menu}
