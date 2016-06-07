@@ -419,14 +419,14 @@ const Select = React.createClass({
 	},
 
 	handleMenuFocus (event) {
-		var menuNode = _reactDom2['default'].findDOMNode(this.refs.menu);
+		let menuNode = ReactDOM.findDOMNode(this.refs.menu);
 		if (menuNode){
 			menuNode.focus();
 		}
 	},
 
 	handleMenuBlur (event) {
-		var onBlurredState = {
+		let onBlurredState = {
 			isFocused: false,
 			isOpen: false,
 			isPseudoFocused: false
