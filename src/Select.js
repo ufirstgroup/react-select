@@ -187,6 +187,7 @@ const Select = React.createClass({
 			menuNode.scrollTop = 0;
 			this.hasScrolledToOption = true;
 			this.handleMenuFocus();
+			document.getElementsByClassName('filter-panel')[0].scrollTop = document.body.scrollHeight;
 		} else if (!this.state.isOpen) {
 			this.hasScrolledToOption = false;
 		}
