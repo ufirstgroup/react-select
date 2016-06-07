@@ -864,7 +864,7 @@ const Select = React.createClass({
 		return (
 			<div ref="menuContainer" className="Select-menu-outer" style={this.props.menuContainerStyle}>
 				<div ref="menu" className="Select-menu"
-						 tabIndex=0
+						 tabIndex={0}
 						 style={this.props.menuStyle}
 						 onScroll={this.handleMenuScroll}
 						 onBlur={this.handleMenuBlur}

@@ -306,7 +306,7 @@ var _react2 = _interopRequireDefault(_react);
 
 var _reactDom = (typeof window !== "undefined" ? window['ReactDOM'] : typeof global !== "undefined" ? global['ReactDOM'] : null);
 
-var _reactDom2 = _interopRequireDefault(_reactDom);
+var _reactDom3 = _interopRequireDefault(_reactDom);
 
 var _reactInputAutosize = (typeof window !== "undefined" ? window['AutosizeInput'] : typeof global !== "undefined" ? global['AutosizeInput'] : null);
 
@@ -502,18 +502,20 @@ var Select = _react2['default'].createClass({
 	componentDidUpdate: function componentDidUpdate(prevProps, prevState) {
 		// focus to the selected option
 		if (this.refs.menu && this.refs.focused && this.state.isOpen && !this.hasScrolledToOption) {
-			var focusedOptionNode = _reactDom2['default'].findDOMNode(this.refs.focused);
-			var menuNode = _reactDom2['default'].findDOMNode(this.refs.menu);
+			var focusedOptionNode = _reactDom3['default'].findDOMNode(this.refs.focused);
+			var menuNode = _reactDom3['default'].findDOMNode(this.refs.menu);
 			menuNode.scrollTop = 0;
 			this.hasScrolledToOption = true;
+			this.handleMenuFocus();
+			document.getElementsByClassName('filter-panel')[0].scrollTop = document.body.scrollHeight;
 		} else if (!this.state.isOpen) {
 			this.hasScrolledToOption = false;
 		}
 
 		if (this._scrollToFocusedOptionOnUpdate && this.refs.focused && this.refs.menu) {
 			this._scrollToFocusedOptionOnUpdate = false;
-			var focusedDOM = _reactDom2['default'].findDOMNode(this.refs.focused);
-			var menuDOM = _reactDom2['default'].findDOMNode(this.refs.menu);
+			var focusedDOM = _reactDom3['default'].findDOMNode(this.refs.focused);
+			var menuDOM = _reactDom3['default'].findDOMNode(this.refs.menu);
 			var focusedRect = focusedDOM.getBoundingClientRect();
 			var menuRect = menuDOM.getBoundingClientRect();
 			if (focusedRect.bottom > menuRect.bottom || focusedRect.top < menuRect.top) {
@@ -740,6 +742,25 @@ var Select = _react2['default'].createClass({
 	handleValueClick: function handleValueClick(option, event) {
 		if (!this.props.onValueClick) return;
 		this.props.onValueClick(option, event);
+	},
+
+	handleMenuFocus: function handleMenuFocus(event) {
+		var menuNode = _reactDom2['default'].findDOMNode(this.refs.menu);
+		if (menuNode) {
+			menuNode.focus();
+		}
+	},
+
+	handleMenuBlur: function handleMenuBlur(event) {
+		var onBlurredState = {
+			isFocused: false,
+			isOpen: false,
+			isPseudoFocused: false
+		};
+		if (this.props.onBlurResetsInput) {
+			onBlurredState.inputValue = '';
+		}
+		this.setState(onBlurredState);
 	},
 
 	handleMenuScroll: function handleMenuScroll(event) {
@@ -991,7 +1012,7 @@ var Select = _react2['default'].createClass({
 					onBlur: this.handleInputBlur,
 					onFocus: this.handleInputFocus,
 					ref: 'input',
-					style: { border: 0, width: 1 } }));
+					style: { border: 0, width: 1, height: 0 } }));
 			}
 			if (this.props.autosize) {
 				return _react2['default'].createElement(_reactInputAutosize2['default'], _extends({}, this.props.inputProps, {
@@ -1191,8 +1212,10 @@ var Select = _react2['default'].createClass({
 			_react2['default'].createElement(
 				'div',
 				{ ref: 'menu', className: 'Select-menu',
+					tabIndex: 0,
 					style: this.props.menuStyle,
 					onScroll: this.handleMenuScroll,
+					onBlur: this.handleMenuBlur,
 					onMouseDown: this.handleMouseDownOnMenu },
 				this.renderInput(),
 				menu
